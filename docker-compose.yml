@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: rag-llm-app
+    volumes:
+      - ./.env:/app/.env:ro
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+    restart: unless-stopped
+    stdin_open: true  # equivalent to docker run -i
+    tty: true        # equivalent to docker run -t
+    ports:
+      - "8000:8000"
+ 
