@@ -1,58 +1,58 @@
 # RAG-Enhanced LLM Assistant
 
-Uma aplicação Python que combina o poder de Large Language Models (LLM) com Retrieval-Augmented Generation (RAG) usando Supabase como banco de dados vetorial. Agora expõe um endpoint HTTP para integração com frontends modernos (ex: React/Lovable).
+A Python application that combines the power of Large Language Models (LLM) with Retrieval-Augmented Generation (RAG) using Supabase as a vector database. Now exposes an HTTP endpoint for integration with modern frontends (e.g., React/Lovable).
 
-## Principais Funcionalidades
+## Main Features
 
-- 🤖 Integração com DeepSeek-R1-Distill-Qwen-7B via RunPod API
-- 🔍 Busca vetorial e contexto via Supabase
-- 💬 Endpoint HTTP para chat estilo ChatGPT
-- 💾 Histórico de conversas e mensagens
-- 🐳 Suporte completo a Docker
+- 🤖 Integration with DeepSeek-R1-Distill-Qwen-7B via RunPod API
+- 🔍 Vector search and context via Supabase
+- 💬 HTTP endpoint for ChatGPT-style chat
+- 💾 Conversation and message history
+- 🐳 Full Docker support
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 .
 ├── src/
 │   ├── config/
-│   │   └── settings.py         # Configuração e variáveis de ambiente
+│   │   └── settings.py         # Configuration and environment variables
 │   ├── services/
-│   │   ├── llm_service.py     # Integração com RunPod LLM
-│   │   ├── supabase_service.py # Operações com Supabase
-│   │   ├── rag_service.py     # Lógica RAG
-│   │   ├── conversation_service.py # Gerenciamento de conversas
-│   │   └── http_service.py    # API HTTP (FastAPI)
-│   └── main.py                # Inicialização do servidor
-├── .env                       # Variáveis de ambiente
-├── requirements.txt           # Dependências Python
-├── Dockerfile                 # Configuração Docker
-├── docker-compose.yml         # Orquestração Docker
-└── README.md                  # Documentação
+│   │   ├── llm_service.py     # RunPod LLM integration
+│   │   ├── supabase_service.py # Supabase operations
+│   │   ├── rag_service.py     # RAG logic
+│   │   ├── conversation_service.py # Conversation management
+│   │   └── http_service.py    # HTTP API (FastAPI)
+│   └── main.py                # Server initialization
+├── .env                       # Environment variables
+├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Docker configuration
+├── docker-compose.yml         # Docker orchestration
+└── README.md                  # Documentation
 ```
 
-## Como rodar (Docker)
+## How to Run (Docker)
 
-1. Crie um arquivo `.env` com suas credenciais:
+1. Create a `.env` file with your credentials:
 
 ```
-RUNPOD_API_TOKEN=seu_token_runpod
-RUNPOD_ENDPOINT_ID=seu_endpoint_id
-SUPABASE_URL=sua_url_supabase
-SUPABASE_KEY=sua_service_key_supabase
+RUNPOD_API_TOKEN=your_runpod_token
+RUNPOD_ENDPOINT_ID=your_endpoint_id
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_service_key
 ```
 
-2. Suba o container:
+2. Start the container:
 
 ```bash
 docker-compose up --build
 ```
 
-3. O backend estará disponível em: [http://localhost:8000](http://localhost:8000)
+3. The backend will be available at: [http://localhost:8000](http://localhost:8000)
 
-## API HTTP
+## HTTP API
 
-### Enviar mensagem ao agente
+### Send a message to the agent
 
 **Endpoint:**
 ```
@@ -62,24 +62,24 @@ POST /message
 **Payload:**
 ```json
 {
-  "conversation_id": "<uuid da conversa>",
-  "message": "Olá, agente!"
+  "conversation_id": "<conversation uuid>",
+  "message": "Hello, agent!"
 }
 ```
 
-**Resposta:**
+**Response:**
 ```json
 {
-  "response": "Olá! Como posso ajudar?"
+  "response": "Hello! How can I help you?"
 }
 ```
 
-### Fluxo sugerido para o frontend
-- Criar uma conversa (endpoint futuro ou criar direto no banco)
-- Enviar mensagens via POST `/message`
-- Exibir a resposta retornada
+### Suggested Frontend Flow
+- Create a conversation (future endpoint or directly in the database)
+- Send messages via POST `/message`
+- Display the returned response
 
-## Supabase: Estrutura das Tabelas
+## Supabase: Table Structure
 
 ```sql
 create table conversations (
@@ -101,23 +101,30 @@ create table messages (
 create index messages_conversation_id_idx on messages(conversation_id);
 ```
 
-## Observações
-- Use a **service key** do Supabase para evitar problemas de permissão.
-- O endpoint HTTP está pronto para integração com qualquer frontend moderno (React, Vue, etc).
-- Para testes, acesse [http://localhost:8000/docs](http://localhost:8000/docs) (Swagger UI do FastAPI).
+## Notes
+- Use the **service key** from Supabase to avoid permission issues.
+- The HTTP endpoint is ready for integration with any modern frontend (React, Vue, etc).
+- For testing, access [http://localhost:8000/docs](http://localhost:8000/docs) (FastAPI Swagger UI).
 
-## Requisitos
+## Requirements
 - Python 3.8+
-- Docker e Docker Compose
-- Conta no RunPod e Supabase
+- Docker and Docker Compose
+- RunPod and Supabase accounts
 
-## Segurança
-2. Enable the pgvector extension if not already enabled:
+## Security
+- Never share your `.env` or your keys publicly.
+- Use secure environment variables in production.
+
+---
+
+If you need additional endpoints (create conversation, history, etc.), or WebSocket integration, just ask! 
+
+Enable the pgvector extension if not already enabled:
 ```sql
 create extension if not exists vector;
 ```
 
-3. Create the similarity search function:
+Create the similarity search function:
 ```sql
 create or replace function match_documents (
   query_text text,
@@ -144,16 +151,14 @@ $$;
 ```
 
 ## Usage
+Run the application (either locally or with Docker)
 
-1. Run the application (either locally or with Docker)
-
-2. Available commands:
+Available commands:
 - Type your questions normally to chat with the assistant
 - Type 'history' to view the current conversation history
 - Type 'exit' to end the conversation
 
 ## Features in Detail
-
 ### Conversation Management
 - Each session creates a new conversation with a unique ID
 - All messages (both user and assistant) are stored in the database
@@ -171,7 +176,6 @@ $$;
 - Clear error messages for debugging
 
 ## Requirements
-
 - Python 3.8+ (for local development)
 - Docker and Docker Compose (for containerized deployment)
 - RunPod API token and endpoint ID
@@ -179,7 +183,6 @@ $$;
 - Required Python packages (see requirements.txt)
 
 ## Security Notes
-
 - Never commit your `.env` file
 - Keep your API tokens secure
 - Use appropriate access controls in Supabase
@@ -187,13 +190,11 @@ $$;
 - When using Docker, mount the `.env` file as read-only
 
 ## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+- Fork the repository
+- Create a feature branch
+- Commit your changes
+- Push to the branch
+- Create a Pull Request
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details. 
