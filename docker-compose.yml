@@ -5,11 +5,12 @@ services:
     build:
       context: ./frontend-v0.1.2
       dockerfile: Dockerfile
-    container_name: rag-llm-frontend
     ports:
       - "80:80"
     depends_on:
       - backend
+    environment:
+      - VITE_API_URL=http://localhost/api
     networks:
       - app-network
 
@@ -17,19 +18,39 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: rag-llm-backend
-    volumes:
-      - ./backend/.env:/app/.env:ro
-    env_file:
-      - ./backend/.env
-    environment:
-      - TZ=UTC
-    restart: unless-stopped
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/hackathon
+      - JWT_SECRET=${JWT_SECRET:-hackathon_secret_key_change_in_production}
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+      - TWITTER_USERNAME=${TWITTER_USERNAME}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hackathon
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
 
 networks:
   app-network:
-    driver: bridge 
+    driver: bridge
+
+volumes:
+  postgres_data: 

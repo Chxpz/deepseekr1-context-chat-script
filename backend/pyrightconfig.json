@@ -1,0 +1,12 @@
+{
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/__pycache__"],
+  "ignore": ["src/tests"],
+  "reportMissingImports": true,
+  "reportMissingModuleSource": true,
+  "pythonVersion": "3.9",
+  "typeCheckingMode": "basic",
+  "venvPath": ".",
+  "venv": "venv",
+  "extraPaths": ["src"]
+} 

@@ -1,147 +1,148 @@
-import { useState } from "react";
-import { X, AlertCircle } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { useWalletAuth } from "@/hooks/useWalletAuth";
-import { UserProfileModal } from "./UserProfileModal";
-import { AuthStepContent } from "./auth/AuthStepContent";
-import { ModalBackground } from "./auth/ModalBackground";
-import { ModalHeader } from "./auth/ModalHeader";
+import React, { useState } from 'react';
+import { useWalletAuth } from '../hooks/useWalletAuth';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Loader2 } from 'lucide-react';
 
 interface AccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticated: () => void;
 }
 
-export const AccessModal = ({ isOpen, onClose, onAuthenticated }: AccessModalProps) => {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [authStep, setAuthStep] = useState<'connect' | 'signing' | 'profile' | 'complete'>('connect');
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  
-  const { authenticate, checkUserProfile, createUserProfile, isLoading, error } = useWalletAuth();
+export const AccessModal: React.FC<AccessModalProps> = ({ isOpen, onClose }) => {
+  const {
+    isAuthenticated,
+    isLoading,
+    error,
+    user,
+    wallet,
+    connectWallet,
+    disconnectWallet,
+    verifyTwitter,
+    verifyDiscord
+  } = useWalletAuth();
 
-  const connectWallet = async () => {
-    setAuthStep('connect');
+  const [twitterUsername, setTwitterUsername] = useState('');
+  const [discordUsername, setDiscordUsername] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleConnect = async () => {
     try {
-      // Check if MetaMask is available
-      if (window.ethereum && !window.ethereum.isCoinbaseWallet) {
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts',
-        });
-        
-        if (accounts.length > 0) {
-          const address = accounts[0];
-          setWalletAddress(address);
-          await handleAuthentication(address);
-        }
-      } else {
-        // Redirect to MetaMask if not available
-        window.open('https://metamask.io/', '_blank');
-      }
-    } catch (error) {
-      console.error('Wallet connection failed:', error);
+      await connectWallet();
+    } catch (err) {
+      console.error('Failed to connect wallet:', err);
     }
   };
 
-  const handleAuthentication = async (address: string) => {
+  const handleTwitterVerify = async () => {
     try {
-      setAuthStep('signing');
-      
-      // First authenticate with signature
-      await authenticate(address);
-      
-      // Check if user has a complete profile
-      const existingProfile = await checkUserProfile(address);
-      
-      // We now require both Twitter and Telegram handles
-      if (existingProfile && existingProfile.twitter && existingProfile.telegram) {
-        // User has complete profile with required social media handles
-        setAuthStep('complete');
-        setTimeout(() => {
-          onAuthenticated();
-          onClose();
-        }, 1500);
-      } else {
-        // Show profile setup modal for social media verification
-        setAuthStep('profile');
-        setShowProfileModal(true);
-      }
-    } catch (error) {
-      console.error('Authentication failed:', error);
-      setAuthStep('connect');
+      await verifyTwitter(twitterUsername);
+      setTwitterUsername('');
+    } catch (err) {
+      console.error('Failed to verify Twitter:', err);
     }
   };
 
-  const handleProfileSubmit = async (profileData: { twitter: string; telegram: string }) => {
-    if (!walletAddress) return;
-    
-    // Create profile with the wallet and social media handles (no email/discord)
-    await createUserProfile({
-      wallet: walletAddress,
-      twitter: profileData.twitter,
-      telegram: profileData.telegram,
-    });
-    
-    setShowProfileModal(false);
-    setAuthStep('complete');
-    
-    // In a real implementation, this is where backend verification would happen
-    // For now we immediately proceed to successful authentication
-    setTimeout(() => {
-      onAuthenticated();
-      onClose();
-    }, 1500);
+  const handleDiscordVerify = async () => {
+    try {
+      await verifyDiscord(discordUsername);
+      setDiscordUsername('');
+    } catch (err) {
+      console.error('Failed to verify Discord:', err);
+    }
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent 
-          className="max-w-2xl bg-black/95 border-2 border-cyan-500/30 backdrop-blur-xl text-white relative p-8 mx-auto my-auto left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 fixed"
-          hideCloseButton={true}
-        >
-          <ModalBackground />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-900 p-8 rounded-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold text-white mb-6">Access Chat</h2>
+        
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+          </div>
+        ) : error ? (
+          <div className="text-red-500 mb-4">{error}</div>
+        ) : !isAuthenticated ? (
+          <div className="space-y-4">
+            <p className="text-gray-300 mb-4">
+              Connect your wallet to access the chat
+            </p>
+            <Button
+              onClick={handleConnect}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Connect Wallet
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <p className="text-gray-300">Connected Wallet:</p>
+              <p className="text-white font-mono text-sm break-all">{wallet}</p>
+            </div>
 
-          {/* Our custom close button */}
-          <button
-            onClick={onClose}
-            className="absolute right-6 top-6 z-20 p-3 rounded-full bg-black/40 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-200 flex items-center justify-center group"
-          >
-            <X className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-          </button>
-
-          <ModalHeader />
-
-          <div className="space-y-6 relative z-10">
-            {error && (
-              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                <p className="text-red-400 text-sm">{error}</p>
+            {!user?.twitter_verified && (
+              <div className="space-y-2">
+                <p className="text-gray-300">Verify Twitter</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Twitter Username"
+                    value={twitterUsername}
+                    onChange={(e) => setTwitterUsername(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleTwitterVerify}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Verify
+                  </Button>
+                </div>
               </div>
             )}
 
-            <AuthStepContent 
-              authStep={authStep}
-              isLoading={isLoading}
-              onConnectWallet={connectWallet}
-            />
+            {!user?.discord_verified && (
+              <div className="space-y-2">
+                <p className="text-gray-300">Verify Discord</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Discord Username"
+                    value={discordUsername}
+                    onChange={(e) => setDiscordUsername(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={handleDiscordVerify}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Verify
+                  </Button>
+                </div>
+              </div>
+            )}
 
-            <div className="text-center text-xs text-gray-500 mt-6">
-              By connecting, you agree to our community guidelines and social verification process.
-            </div>
+            {user?.twitter_verified && user?.discord_verified && (
+              <Button
+                onClick={onClose}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                Access Chat
+              </Button>
+            )}
+
+            <Button
+              onClick={disconnectWallet}
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+            >
+              Disconnect
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <UserProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        onSubmit={handleProfileSubmit}
-        walletAddress={walletAddress || ''}
-      />
-    </>
+        )}
+      </div>
+    </div>
   );
 };

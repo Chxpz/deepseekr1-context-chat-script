@@ -1,49 +1,78 @@
+import { ethers } from 'ethers';
 
-export const authService = {
-  async fetchNonce(walletAddress: string): Promise<string> {
-    try {
-      console.log('Fetching nonce for wallet:', walletAddress);
-      // Mock implementation - replace with actual API call
-      const mockNonce = Math.random().toString(36).substring(7);
-      console.log('Generated mock nonce:', mockNonce);
-      return mockNonce;
-    } catch (error: unknown) {
-      console.error('Error fetching nonce:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch nonce';
-      throw new Error(errorMessage);
-    }
-  },
+interface AuthResponse {
+  token: string;
+  user: {
+    wallet_address: string;
+    twitter_username?: string;
+    discord_username?: string;
+    twitter_verified: boolean;
+    discord_verified: boolean;
+  };
+}
 
-  async signMessage(message: string): Promise<string> {
-    try {
-      console.log('Signing message:', message);
-      // Mock implementation - replace with actual wallet signing
-      const mockSignature = `mock_signature_${Date.now()}`;
-      console.log('Generated mock signature:', mockSignature);
-      return mockSignature;
-    } catch (error: unknown) {
-      console.error('Error signing message:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to sign message';
-      throw new Error(errorMessage);
-    }
-  },
+class AuthService {
+  private baseUrl: string;
 
-  async verifySignature(walletAddress: string, signature: string): Promise<{ token: string; user: any }> {
-    try {
-      console.log('Verifying signature for wallet:', walletAddress);
-      // Mock implementation - replace with actual API call
-      const mockToken = `mock_token_${Date.now()}`;
-      const mockUser = {
-        wallet: walletAddress,
-        twitter: '',
-        telegram: ''
-      };
-      console.log('Generated mock auth response:', { token: mockToken, user: mockUser });
-      return { token: mockToken, user: mockUser };
-    } catch (error: unknown) {
-      console.error('Error verifying signature:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to verify signature';
-      throw new Error(errorMessage);
-    }
+  constructor() {
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
   }
-};
+
+  async signMessage(): Promise<{ address: string; signature: string }> {
+    if (!window.ethereum) {
+      throw new Error('No Ethereum wallet found');
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+
+    // Get nonce from backend
+    const nonce = await this.fetchNonce(address);
+
+    // Sign message
+    const message = `Sign this message to authenticate with Autonoma AI. Nonce: ${nonce}`;
+    const signature = await signer.signMessage(message);
+
+    return { address, signature };
+  }
+
+  async fetchNonce(address: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/auth/nonce`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch nonce');
+    }
+
+    const data = await response.json();
+    return data.nonce;
+  }
+
+  async verifySignature(address: string, signature: string, message: string): Promise<AuthResponse> {
+    const response = await fetch(`${this.baseUrl}/auth/wallet`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address,
+        signature,
+        message,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to verify signature');
+    }
+
+    return response.json();
+  }
+}
+
+export const authService = new AuthService();
