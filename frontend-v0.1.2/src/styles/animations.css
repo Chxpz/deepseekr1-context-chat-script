@@ -1,0 +1,245 @@
+/* Keyframe Animations */
+@keyframes neon-flicker {
+  0%, 100% { 
+    text-shadow: 
+      0 0 5px #00ffff,
+      0 0 10px #00ffff,
+      0 0 15px #00ffff,
+      0 0 20px #00ffff;
+  }
+  50% { 
+    text-shadow: 
+      0 0 2px #00ffff,
+      0 0 5px #00ffff,
+      0 0 8px #00ffff,
+      0 0 12px #00ffff;
+  }
+}
+
+@keyframes neural-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes circuit-flow {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(100px, 100px); }
+}
+
+@keyframes particle-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-50px, -50px); }
+}
+
+@keyframes glow-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes circuit-border-flow {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-10px); }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    color: #9ca3af;
+  }
+  50% { 
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+    color: #00ffff;
+  }
+}
+
+@keyframes quantum-float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(300px, -300px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes scan {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(180deg); }
+}
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(10px) rotate(-180deg); }
+}
+
+@keyframes power-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px currentColor;
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 20px currentColor;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes message-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes typing-pulse {
+  0%, 60%, 100% { 
+    transform: translateY(0) scale(1);
+    opacity: 0.4;
+  }
+  30% { 
+    transform: translateY(-12px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes slide {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-60px, -60px); }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes enhanced-glow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 25px rgba(0, 255, 255, 0.8));
+    transform: scale(1.02);
+  }
+}
+
+@keyframes tech-pulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes data-flow {
+  0% { 
+    transform: translateX(-100%) translateY(0);
+    opacity: 0;
+  }
+  10% { 
+    opacity: 1;
+  }
+  90% { 
+    opacity: 1;
+  }
+  100% { 
+    transform: translateX(100vw) translateY(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes hologram-flicker {
+  0%, 100% { 
+    opacity: 1;
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    opacity: 0.8;
+    filter: hue-rotate(90deg);
+  }
+  50% { 
+    opacity: 0.9;
+    filter: hue-rotate(180deg);
+  }
+  75% { 
+    opacity: 0.85;
+    filter: hue-rotate(270deg);
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-enhanced-glow {
+  animation: enhanced-glow 3s ease-in-out infinite;
+}
+
+.animate-tech-pulse {
+  animation: tech-pulse 2s ease-in-out infinite;
+}
+
+.animate-data-flow {
+  animation: data-flow 8s linear infinite;
+}
+
+.animate-hologram-flicker {
+  animation: hologram-flicker 5s ease-in-out infinite;
+}

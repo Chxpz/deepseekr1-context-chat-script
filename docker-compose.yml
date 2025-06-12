@@ -3,7 +3,7 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-v0.1.2
       dockerfile: Dockerfile
     container_name: rag-llm-frontend
     ports:

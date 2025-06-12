@@ -1,0 +1,191 @@
+/* Feature Cards */
+.feature-card {
+  position: relative;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.feature-card:hover {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow: 
+    0 25px 50px rgba(0, 255, 255, 0.25),
+    0 0 0 1px rgba(0, 255, 255, 0.1);
+}
+
+.feature-card:active {
+  transform: translateY(-8px) scale(1.01);
+}
+
+.feature-glow {
+  background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+  animation: glow-sweep 2s ease-in-out infinite;
+}
+
+/* Technical Panel */
+.technical-panel {
+  position: relative;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+}
+
+.technical-panel:hover {
+  border-color: rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+}
+
+.circuit-border {
+  background: 
+    linear-gradient(90deg, #00ffff 2px, transparent 2px),
+    linear-gradient(180deg, #00ffff 2px, transparent 2px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+  animation: circuit-border-flow 3s linear infinite;
+}
+
+/* Launch Button */
+.launch-button {
+  position: relative;
+  background: linear-gradient(45deg, #00ffff, #0080ff);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.launch-button:hover {
+  box-shadow: 
+    0 0 40px rgba(0, 255, 255, 0.8),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px) scale(1.05);
+}
+
+.launch-button:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Chat Components */
+.chat-container {
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(0, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.chat-container:hover {
+  box-shadow: 
+    0 35px 70px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(0, 255, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.chat-header {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 0, 0, 0.3));
+}
+
+.message-bubble {
+  animation: slide-in 0.3s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+.message-wrapper {
+  animation: message-slide-in 0.4s ease-out;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  space-x: 4px;
+}
+
+.typing-dot {
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(45deg, #00ffff, #0080ff);
+  border-radius: 50%;
+  animation: typing-pulse 1.8s infinite;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.messages-area {
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 150, 255, 0.05) 0%, transparent 50%);
+}
+
+/* Scanning Line Effect */
+.scanning-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 255, 255, 0.4), 
+    rgba(0, 255, 255, 1), 
+    rgba(0, 255, 255, 0.4), 
+    transparent
+  );
+  animation: scan 4s infinite;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.scanning-line::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 150, 255, 0.4), 
+    rgba(0, 150, 255, 0.8), 
+    rgba(0, 150, 255, 0.4), 
+    transparent
+  );
+  animation: scan 6s infinite reverse;
+  box-shadow: 0 0 8px rgba(0, 150, 255, 0.4);
+}
+
+/* Additional tech effects */
+.tech-border {
+  position: relative;
+}
+
+.tech-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  background: linear-gradient(45deg, 
+    transparent, 
+    rgba(0, 255, 255, 0.3), 
+    transparent, 
+    rgba(0, 150, 255, 0.3), 
+    transparent
+  );
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  animation: border-flow 3s linear infinite;
+}
+
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
