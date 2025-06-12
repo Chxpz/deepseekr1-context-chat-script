@@ -1,5 +1,6 @@
 import requests
 import time
+import json
 from typing import Dict, Any, Optional
 from src.config.settings import settings
 
@@ -12,10 +13,10 @@ class LLMService:
         self.endpoint_id = settings.RUNPOD_ENDPOINT_ID
     
     def _format_prompt(self, prompt: str, context: Optional[str] = None) -> str:
-        """Format the prompt with optional context."""
+        """Format the prompt with agent personality and optional context."""
         if context:
-            return f"<think>\nContext: {context}\n\nQuestion: {prompt}\n</think>"
-        return f"<think>\n{prompt}\n</think>"
+            return f"<think>\nPersonality: {settings.AGENT_PERSONALITY}\nContext: {context}\n\nQuestion: {prompt}\n</think>"
+        return f"<think>\nPersonality: {settings.AGENT_PERSONALITY}\n\nQuestion: {prompt}\n</think>"
     
     def run_job(self, prompt: str, context: Optional[str] = None) -> str:
         """Run a job on RunPod."""
@@ -24,19 +25,18 @@ class LLMService:
             payload = {
                 "input": {
                     "prompt": formatted_prompt,
-                    "temperature": settings.MODEL_TEMPERATURE,
-                    "max_tokens": settings.MODEL_MAX_TOKENS,
-                    "top_p": settings.MODEL_TOP_P,
+                    "temperature": settings.TEMPERATURE,
+                    "max_tokens": settings.MAX_TOKENS,
+                    "top_p": settings.TOP_P,
                     "stop": ["</think>"]
                 }
             }
-            
             url = f"https://api.runpod.ai/v2/{self.endpoint_id}/run"
             response = requests.post(url, headers=self.headers, json=payload)
             response.raise_for_status()
             return response.json()["id"]
         except Exception as e:
-            print(f"Error starting job: {str(e)}")
+            print(f"❌ Error starting job: {str(e)}")
             raise
     
     def check_status(self, job_id: str) -> Dict[str, Any]:
@@ -47,7 +47,7 @@ class LLMService:
             response.raise_for_status()
             return response.json()
         except Exception as e:
-            print(f"Error checking status: {str(e)}")
+            print(f"❌ Error checking status: {str(e)}")
             raise
     
     def wait_for_result(self, job_id: str, interval: int = 2) -> str:
@@ -71,17 +71,43 @@ class LLMService:
                 print("⚙️ Processing...")
             
             time.sleep(interval)
-    
-    def _process_output(self, output: Dict[str, Any]) -> str:
-        """Process the model output to extract the response text."""
+        
+    def _process_output(self, output: Any) -> str:
+        """Extract and return clean plain-text response from the LLM output."""
         try:
-            if isinstance(output, dict) and "choices" in output:
-                choices = output["choices"]
-                if choices and len(choices) > 0:
-                    tokens = choices[0].get("tokens", [])
-                    if tokens:
-                        return " ".join(tokens).strip()
-            return str(output).strip()
+            if isinstance(output, str):
+                try:
+                    output = json.loads(output)
+                except json.JSONDecodeError:
+                    return self._clean_text(output)
+
+            if isinstance(output, list):
+                for item in output:
+                    if isinstance(item, dict):
+                        choices = item.get("choices", [])
+                        for choice in choices:
+                            tokens = choice.get("tokens")
+                            if isinstance(tokens, list):
+                                joined = "".join(tokens)
+                                return self._clean_text(joined)
+                            elif isinstance(tokens, str):
+                                return self._clean_text(tokens)
+
+            if isinstance(output, dict):
+                for key in ["text", "response", "output", "result"]:
+                    if key in output:
+                        return self._clean_text(str(output[key]))
+
+            return self._clean_text(str(output))
+
         except Exception as e:
-            print(f"Warning: Failed to process output: {str(e)}")
-            return str(output).strip() 
+            print(f"⚠️ Warning: Failed to process output: {str(e)}")
+            return self._clean_text(str(output))
+    
+    def _clean_text(self, text: str) -> str:
+        """Remove noise from the model's response for clean output."""
+        text = text.replace('\\n', '\n').replace('\\t', '    ').replace('\\"', '"')
+        text = text.replace('[', '').replace(']', '').replace('{', '').replace('}', '')
+        text = text.replace("'", '').replace('"', '')
+        text = ' '.join(text.split())  # remove múltiplos espaços e quebras
+        return text.strip()

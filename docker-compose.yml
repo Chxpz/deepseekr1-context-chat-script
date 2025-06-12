@@ -1,18 +1,35 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    container_name: rag-llm-app
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rag-llm-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag-llm-backend
     volumes:
-      - ./.env:/app/.env:ro
+      - ./backend/.env:/app/.env:ro
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - TZ=UTC
     restart: unless-stopped
-    stdin_open: true  # equivalent to docker run -i
-    tty: true        # equivalent to docker run -t
     ports:
       - "8000:8000"
- 
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge 

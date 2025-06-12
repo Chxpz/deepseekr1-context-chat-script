@@ -30,10 +30,12 @@ class RAGService:
             
             if not context:
                 print("No relevant context found. Proceeding with direct question.")
-                return await self.llm.wait_for_result(question)
+                job_id = self.llm.run_job(question)
+                return self.llm.wait_for_result(job_id)
             
             # Run LLM with context
-            return await self.llm.wait_for_result(question, context)
+            job_id = self.llm.run_job(question, context)
+            return self.llm.wait_for_result(job_id)
             
         except Exception as e:
             print(f"Error in RAG process: {str(e)}")

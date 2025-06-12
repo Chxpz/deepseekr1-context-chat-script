@@ -117,7 +117,6 @@ create index messages_conversation_id_idx on messages(conversation_id);
 
 ---
 
-If you need additional endpoints (create conversation, history, etc.), or WebSocket integration, just ask! 
 
 Enable the pgvector extension if not already enabled:
 ```sql
