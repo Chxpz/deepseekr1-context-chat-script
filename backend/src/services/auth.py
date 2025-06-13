@@ -1,76 +1,87 @@
+import os
 import jwt
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from eth_account.messages import encode_defunct
 from web3 import Web3
-from ..config import settings
-from ..db import execute_query
-from ..middleware.auth import create_access_token
+from ..services.supabase_service import supabase_service
 from ..models.user import User, CreateUserDTO
+from ..middleware.auth import create_access_token
+from fastapi import HTTPException, status
 
 class AuthService:
     def __init__(self):
         self.web3 = Web3()
+        self.jwt_secret = os.getenv("JWT_SECRET", "dev_secret_key")
+        self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
+        self.access_token_expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
     @staticmethod
-    def generate_token(wallet_address: str) -> str:
-        """Generate a JWT token for the given wallet address."""
-        payload = {
-            'wallet_address': wallet_address,
-            'exp': datetime.utcnow() + timedelta(days=1)
-        }
-        return jwt.encode(payload, settings.JWT_SECRET, algorithm='HS256')
-
-    async def verify_signature(self, address: str, signature: str, message: str) -> bool:
-        """Verify the signature of a message from a wallet."""
+    def verify_signature(message: str, signature: str, wallet_address: str) -> bool:
+        """Verify Ethereum signature."""
         try:
-            # Create a message hash
             message_hash = encode_defunct(text=message)
-            
-            # Recover the address from the signature
-            recovered_address = self.web3.eth.account.recover_message(message_hash, signature=signature)
-            
-            # Compare the recovered address with the provided wallet address
-            return recovered_address.lower() == address.lower()
+            recovered_address = Web3().eth.account.recover_message(message_hash, signature=signature)
+            return recovered_address.lower() == wallet_address.lower()
         except Exception as e:
             print(f"Error verifying signature: {e}")
             return False
 
-    @staticmethod
-    def verify_token(token: str) -> Optional[Dict]:
-        """Verify a JWT token and return its payload."""
+    def verify_token(self, token: str) -> Dict[str, Any]:
+        """Verify JWT token."""
         try:
-            return jwt.decode(token, settings.JWT_SECRET, algorithms=['HS256'])
+            payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
+            return payload
         except jwt.ExpiredSignatureError:
-            print("Token has expired")
-            return None
-        except jwt.InvalidTokenError as e:
-            print(f"Invalid token: {e}")
-            return None
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has expired"
+            )
+        except jwt.JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials"
+            )
 
     async def get_or_create_user(self, wallet_address: str) -> User:
-        # Check if user exists
-        result = await execute_query(
-            "SELECT * FROM users WHERE wallet_address = %s",
-            (wallet_address,)
-        )
-        
-        if result:
-            return User(**result[0])
-        
-        # Create new user
-        new_user = CreateUserDTO(wallet_address=wallet_address)
-        result = await execute_query(
-            """
-            INSERT INTO users (wallet_address)
-            VALUES (%s)
-            RETURNING *
-            """,
-            (new_user.wallet_address,)
-        )
-        
-        return User(**result[0])
+        """Get existing user or create new one."""
+        try:
+            result = await supabase_service.client.table("users").select("*").eq("wallet_address", wallet_address).execute()
+            if result.data:
+                return User.from_dict(result.data[0])
+
+            new_user = CreateUserDTO(wallet_address=wallet_address)
+            result = await supabase_service.client.table("users").insert(new_user.dict()).execute()
+            return User.from_dict(result.data[0])
+        except Exception as e:
+            print(f"Error in get_or_create_user: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error creating user"
+            )
+
+    def create_access_token(self, data: Dict[str, Any]) -> str:
+        """Create JWT access token."""
+        to_encode = data.copy()
+        expire = datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes)
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, self.jwt_secret, algorithm=self.jwt_algorithm)
 
     async def authenticate(self, wallet_address: str) -> str:
         user = await self.get_or_create_user(wallet_address)
-        return create_access_token(user.wallet_address) 
+        return self.create_access_token({"sub": user.wallet_address})
+
+    async def authenticate_user(self, username: str, password: str) -> Optional[Dict[str, Any]]:
+        """Authenticate user with Supabase."""
+        try:
+            response = await supabase_service.client.auth.sign_in_with_password({
+                "email": username,
+                "password": password
+            })
+            return response.user
+        except Exception as e:
+            print(f"Error authenticating user: {e}")
+            return None
+
+# Singleton instance
+auth_service = AuthService() 

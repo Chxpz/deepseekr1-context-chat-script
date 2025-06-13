@@ -1,7 +1,8 @@
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Callable
+from functools import wraps
 
 class RateLimiter:
     def __init__(self, requests_per_minute: int = 60):
@@ -35,6 +36,7 @@ class RateLimiter:
 # Create a global rate limiter instance
 rate_limiter = RateLimiter()
 
+# Global middleware for entire app
 async def rate_limit_middleware(request: Request, call_next):
     try:
         await rate_limiter.check_rate_limit(request)
@@ -44,4 +46,18 @@ async def rate_limit_middleware(request: Request, call_next):
         return JSONResponse(
             status_code=e.status_code,
             content={"detail": e.detail}
-        ) 
+        )
+
+# Per-route decorator using global rate_limiter instance
+def rate_limit(times: int = 5, period: int = 60):
+    rate_limiter.requests_per_minute = times  # Shared config
+
+    def decorator(func: Callable):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            request = kwargs.get('request')
+            if request:
+                await rate_limiter.check_rate_limit(request)
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorator 

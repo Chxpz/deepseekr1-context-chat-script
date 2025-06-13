@@ -1,37 +1,38 @@
-from typing import Optional
+import os
 import tweepy
-from ..config import settings
+from typing import Optional
 
 class TwitterService:
     def __init__(self):
-        self.client = tweepy.Client(
-            bearer_token=settings.TWITTER_BEARER_TOKEN,
-            consumer_key=settings.TWITTER_API_KEY,
-            consumer_secret=settings.TWITTER_API_SECRET,
-            access_token=settings.TWITTER_ACCESS_TOKEN,
-            access_token_secret=settings.TWITTER_ACCESS_TOKEN_SECRET
-        )
+        self.api_key = os.getenv("TWITTER_API_KEY")
+        self.api_secret = os.getenv("TWITTER_API_SECRET")
+        self.access_token = os.getenv("TWITTER_ACCESS_TOKEN")
+        self.access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+        self.bearer_token = os.getenv("TWITTER_BEARER_TOKEN")
+        self.username = os.getenv("TWITTER_USERNAME")
+        self.client = None
+
+        if all([self.api_key, self.api_secret, self.access_token, self.access_token_secret]):
+            auth = tweepy.OAuth1UserHandler(
+                self.api_key,
+                self.api_secret,
+                self.access_token,
+                self.access_token_secret
+            )
+            self.client = tweepy.API(auth)
 
     async def verify_user(self, username: str) -> bool:
-        """Verify if a user follows the Twitter account."""
+        """Verify if user follows the configured Twitter account."""
+        if not self.client or not self.username:
+            print("Twitter credentials not configured")
+            return False
+
         try:
-            # Get the user's ID
-            user = self.client.get_user(username=username)
-            if not user.data:
-                return False
-
-            # Check if they follow the target account
-            follows = self.client.get_users_following(
-                user.data.id,
-                max_results=100
-            )
-
-            target_username = settings.TWITTER_USERNAME
-            target_user = self.client.get_user(username=target_username)
-            if not target_user.data:
-                return False
-
-            return any(f.id == target_user.data.id for f in follows.data or [])
+            user = self.client.get_user(screen_name=username)
+            return user.following
         except Exception as e:
             print(f"Error verifying Twitter user: {e}")
-            return False 
+            return False
+
+# Singleton instance
+twitter_service = TwitterService() 

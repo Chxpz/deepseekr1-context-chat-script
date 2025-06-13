@@ -24,6 +24,10 @@ export const Chat: React.FC = () => {
     }
   };
 
+  const handleAuthenticated = () => {
+    setShowAccessModal(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -37,6 +41,7 @@ export const Chat: React.FC = () => {
       <AccessModal
         isOpen={showAccessModal}
         onClose={handleCloseAccessModal}
+        onAuthenticated={handleAuthenticated}
       />
     );
   }

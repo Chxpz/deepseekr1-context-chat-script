@@ -47,14 +47,14 @@ class ConversationService:
             print(f"Error adding message: {str(e)}")
             return {}
     
-    async def get_conversation_history(self, conversation_id: str) -> List[Dict[str, Any]]:
+    async def get_conversation_history(self, user_id: str) -> List[Dict[str, Any]]:
         """
         Get all messages from a conversation.
         """
         try:
             response = self.supabase.client.table("messages")\
                 .select("*")\
-                .eq("conversation_id", conversation_id)\
+                .eq("conversation_id", user_id)\
                 .order("created_at")\
                 .execute()
             

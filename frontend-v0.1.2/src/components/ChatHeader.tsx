@@ -1,4 +1,3 @@
-
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { LogOut, Settings, User } from "lucide-react";
 import {
@@ -8,12 +7,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { ShareButton } from "./ShareButton";
 import { SocialLinks } from "./SocialLinks";
 
 export const ChatHeader = () => {
-  const { user, logout } = useWalletAuth();
+  const { user, disconnect } = useWalletAuth();
 
   const formatWalletAddress = (address: string) => {
     if (!address) return "";
@@ -21,7 +20,7 @@ export const ChatHeader = () => {
   };
 
   const handleDisconnect = () => {
-    logout();
+    disconnect();
   };
 
   return (
@@ -70,7 +69,7 @@ export const ChatHeader = () => {
           <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-cyan-300 font-mono text-xs tracking-wider">
-              {formatWalletAddress(user?.wallet || "")}
+              {formatWalletAddress(user?.wallet_address || "")}
             </span>
           </div>
 
@@ -78,8 +77,7 @@ export const ChatHeader = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
-                variant="ghost" 
-                size="sm"
+                asChild
                 className="relative group h-10 w-10 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300"
               >
                 <User className="w-4 h-4 text-cyan-300" />
@@ -93,7 +91,7 @@ export const ChatHeader = () => {
             >
               <div className="px-3 py-2 border-b border-cyan-500/20">
                 <p className="text-sm font-medium text-cyan-300">Profile Settings</p>
-                <p className="text-xs text-gray-400 font-mono">{formatWalletAddress(user?.wallet || "")}</p>
+                <p className="text-xs text-gray-400 font-mono">{formatWalletAddress(user?.wallet_address || "")}</p>
               </div>
               
               <DropdownMenuItem 

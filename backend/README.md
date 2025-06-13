@@ -19,14 +19,19 @@ A FastAPI-based backend service that handles authentication, user management, an
 
 ## Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the backend root with:
 
 ```env
+# Server (optional)
+PORT=8000
+NODE_ENV=development
+
 # Database
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hackathon
 
 # JWT
 JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRES_IN=7d
 
 # Twitter API
 TWITTER_API_KEY=your_twitter_api_key
@@ -35,6 +40,10 @@ TWITTER_ACCESS_TOKEN=your_twitter_access_token
 TWITTER_ACCESS_TOKEN_SECRET=your_twitter_access_token_secret
 TWITTER_BEARER_TOKEN=your_twitter_bearer_token
 TWITTER_USERNAME=your_twitter_username
+
+# Telegram
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHANNEL_ID=your_telegram_channel_id
 
 # Discord
 DISCORD_GUILD_ID=your_discord_guild_id

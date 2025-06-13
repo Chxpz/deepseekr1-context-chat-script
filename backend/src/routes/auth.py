@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from ..services.auth import AuthService
 from ..middleware.auth import get_current_user
 from ..models.user import User
@@ -9,13 +9,13 @@ auth_service = AuthService()
 
 @router.post("/nonce")
 @rate_limit(times=5, period=60)
-async def get_nonce(wallet_address: str):
+async def get_nonce(request: Request, wallet_address: str):
     """Generate a nonce for wallet authentication."""
     return {"nonce": f"Sign this message to authenticate: {wallet_address}"}
 
 @router.post("/wallet")
 @rate_limit(times=5, period=60)
-async def authenticate_wallet(wallet_address: str, signature: str, message: str):
+async def authenticate_wallet(request: Request, wallet_address: str, signature: str, message: str):
     """Authenticate a wallet using a signature."""
     is_valid = await auth_service.verify_signature(wallet_address, signature, message)
     if not is_valid:

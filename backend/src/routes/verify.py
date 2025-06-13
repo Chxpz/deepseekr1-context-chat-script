@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from ..services.twitter import TwitterService
-from ..services.discord import DiscordService
+from ..services.telegram import TelegramService
 from ..services.user import UserService
 from ..middleware.auth import get_current_user
 from ..models.user import User
 
 router = APIRouter()
 twitter_service = TwitterService()
-discord_service = DiscordService()
+telegram_service = TelegramService()
 user_service = UserService()
 
 @router.post("/twitter")
@@ -30,22 +30,22 @@ async def verify_twitter(
     )
     return updated_user
 
-@router.post("/discord")
-async def verify_discord(
-    discord_username: str,
+@router.post("/telegram")
+async def verify_telegram(
+    telegram_username: str,
     current_user: str = Depends(get_current_user)
 ):
-    """Verify a user's Discord account."""
+    """Verify a user's Telegram account (if they joined the channel)."""
     user = await user_service.get_user_by_wallet(current_user)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    is_verified = await discord_service.verify_user(discord_username)
+    is_verified = await telegram_service.verify_user(telegram_username)
     if not is_verified:
-        raise HTTPException(status_code=400, detail="Discord verification failed")
+        raise HTTPException(status_code=400, detail="Telegram verification failed")
     
     updated_user = await user_service.update_user(
         current_user,
-        {"discord_username": discord_username, "discord_verified": True}
+        {"telegram_username": telegram_username, "telegram_verified": True}
     )
     return updated_user 

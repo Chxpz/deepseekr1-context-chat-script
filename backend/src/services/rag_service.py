@@ -43,4 +43,8 @@ class RAGService:
     
     async def store_knowledge(self, content: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Store new knowledge in the vector database."""
-        return await self.supabase.store_document(content, metadata) 
+        return await self.supabase.store_document(content, metadata)
+
+    async def process_query(self, query: str) -> Dict[str, Any]:
+        # Implementação do processamento RAG
+        pass 

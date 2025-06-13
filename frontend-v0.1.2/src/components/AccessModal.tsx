@@ -7,9 +7,10 @@ import { Loader2 } from 'lucide-react';
 interface AccessModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAuthenticated: () => void;
 }
 
-export const AccessModal: React.FC<AccessModalProps> = ({ isOpen, onClose }) => {
+export const AccessModal: React.FC<AccessModalProps> = ({ isOpen, onClose, onAuthenticated }) => {
   const {
     isAuthenticated,
     isLoading,
@@ -51,6 +52,11 @@ export const AccessModal: React.FC<AccessModalProps> = ({ isOpen, onClose }) => 
     } catch (err) {
       console.error('Failed to verify Discord:', err);
     }
+  };
+
+  const handleAccess = () => {
+    onAuthenticated();
+    onClose();
   };
 
   return (
@@ -127,7 +133,7 @@ export const AccessModal: React.FC<AccessModalProps> = ({ isOpen, onClose }) => 
 
             {user?.twitter_verified && user?.discord_verified && (
               <Button
-                onClick={onClose}
+                onClick={handleAccess}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
               >
                 Access Chat

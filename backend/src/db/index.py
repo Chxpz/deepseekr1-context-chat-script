@@ -44,6 +44,20 @@ def execute_query(query, params=None):
     finally:
         release_connection(conn)
 
+def execute_transaction(queries):
+    """Execute multiple queries in a single transaction."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            for query, params in queries:
+                cur.execute(query, params or ())
+            conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        release_connection(conn)
+
 def init_db():
     """Initialize the database with required tables."""
     try:

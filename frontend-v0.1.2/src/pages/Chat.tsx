@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChatInterface } from "@/components/ChatInterface";
@@ -63,7 +62,6 @@ const Chat = () => {
         <div className="fixed top-20 right-4 z-50">
           <Button 
             onClick={() => setShowAccessModal(true)}
-            variant="outline"
             className="bg-black/50 text-cyan-400 border-cyan-400/50"
           >
             Test Auth Modal

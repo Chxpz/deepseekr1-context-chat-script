@@ -1,22 +1,46 @@
+import os
 import requests
 import time
-import json
 from typing import Dict, Any, Optional
-from src.config.settings import settings
 
 class LLMService:
     def __init__(self):
+        self.api_token = os.getenv("RUNPOD_API_TOKEN")
+        self.endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
+        self.base_url = f"https://api.runpod.ai/v2/{self.endpoint_id}/run"
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.RUNPOD_API_TOKEN}"
+            "Authorization": f"Bearer {self.api_token}"
         }
-        self.endpoint_id = settings.RUNPOD_ENDPOINT_ID
     
     def _format_prompt(self, prompt: str, context: Optional[str] = None) -> str:
-        """Format the prompt with agent personality and optional context."""
+        """Format prompt with optional context."""
         if context:
-            return f"<think>\nPersonality: {settings.AGENT_PERSONALITY}\nContext: {context}\n\nQuestion: {prompt}\n</think>"
-        return f"<think>\nPersonality: {settings.AGENT_PERSONALITY}\n\nQuestion: {prompt}\n</think>"
+            return f"Context: {context}\n\nQuestion: {prompt}\n\nAnswer:"
+        return f"Question: {prompt}\n\nAnswer:"
+    
+    async def generate_response(self, prompt: str, context: Optional[str] = None) -> Optional[str]:
+        """Generate response using RunPod API."""
+        if not self.api_token or not self.endpoint_id:
+            print("RunPod credentials not configured")
+            return None
+
+        try:
+            formatted_prompt = self._format_prompt(prompt, context)
+            payload = {
+                "input": {
+                    "prompt": formatted_prompt,
+                    "max_tokens": 1000,
+                    "temperature": 0.7
+                }
+            }
+            response = requests.post(self.base_url, headers=self.headers, json=payload)
+            response.raise_for_status()
+            result = response.json()
+            return result.get("output", {}).get("text")
+        except Exception as e:
+            print(f"Error generating LLM response: {e}")
+            return None
     
     def run_job(self, prompt: str, context: Optional[str] = None) -> str:
         """Run a job on RunPod."""
@@ -25,14 +49,13 @@ class LLMService:
             payload = {
                 "input": {
                     "prompt": formatted_prompt,
-                    "temperature": settings.TEMPERATURE,
-                    "max_tokens": settings.MAX_TOKENS,
-                    "top_p": settings.TOP_P,
-                    "stop": ["</think>"]
+                    "temperature": 0.7,
+                    "max_tokens": 1000,
+                    "top_p": 1.0,
+                    "stop": ["\n\nAnswer:"]
                 }
             }
-            url = f"https://api.runpod.ai/v2/{self.endpoint_id}/run"
-            response = requests.post(url, headers=self.headers, json=payload)
+            response = requests.post(self.base_url, headers=self.headers, json=payload)
             response.raise_for_status()
             return response.json()["id"]
         except Exception as e:
@@ -111,3 +134,6 @@ class LLMService:
         text = text.replace("'", '').replace('"', '')
         text = ' '.join(text.split())  # remove múltiplos espaços e quebras
         return text.strip()
+
+# Singleton instance
+llm_service = LLMService()
