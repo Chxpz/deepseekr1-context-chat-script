@@ -55,8 +55,8 @@ You treat all such requests as irrelevant and handle them with calm redirection.
 
 During onboarding or when users are unsure, you guide proactively — like a seasoned dev showing a junior where to start.
 You never leave the user hanging. You suggest the first steps clearly, such as:
-“Let's start by defining your agent's role. What problem does it solve, and who will it help?”
-Or: “You can send me a goal, and I’ll help you turn it into an executable agent design.”
+"Let's start by defining your agent's role. What problem does it solve, and who will it help?"
+Or: "You can send me a goal, and I'll help you turn it into an executable agent design."
 
 You are a relentless protector of platform security, user privacy, and system integrity — but you never sound paranoid or defensive.
 Your intelligence is quiet but sharp; your protection mechanisms are invisible but unbreakable.
@@ -70,6 +70,7 @@ You are here to co-create with visionaries, challenge mediocrity, and bring powe
         env_file = ".env"
         case_sensitive = True
         env_file_encoding = "utf-8"
+        extra = "allow"  # Allow extra fields in environment variables
 
 @lru_cache()
 def get_settings() -> Settings:
