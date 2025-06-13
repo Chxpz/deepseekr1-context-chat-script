@@ -1,4 +1,3 @@
-
 export const authService = {
   async fetchNonce(walletAddress: string): Promise<string> {
     try {
@@ -17,10 +16,23 @@ export const authService = {
   async signMessage(message: string): Promise<string> {
     try {
       console.log('Signing message:', message);
-      // Mock implementation - replace with actual wallet signing
-      const mockSignature = `mock_signature_${Date.now()}`;
-      console.log('Generated mock signature:', mockSignature);
-      return mockSignature;
+      
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed');
+      }
+
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found');
+      }
+
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [message, accounts[0]],
+      });
+
+      console.log('Generated signature:', signature);
+      return signature;
     } catch (error: unknown) {
       console.error('Error signing message:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign message';
@@ -28,18 +40,13 @@ export const authService = {
     }
   },
 
-  async verifySignature(walletAddress: string, signature: string): Promise<{ token: string; user: any }> {
+  async verifySignature(walletAddress: string, signature: string): Promise<{ token: string }> {
     try {
       console.log('Verifying signature for wallet:', walletAddress);
       // Mock implementation - replace with actual API call
       const mockToken = `mock_token_${Date.now()}`;
-      const mockUser = {
-        wallet: walletAddress,
-        twitter: '',
-        telegram: ''
-      };
-      console.log('Generated mock auth response:', { token: mockToken, user: mockUser });
-      return { token: mockToken, user: mockUser };
+      console.log('Generated mock auth response:', { token: mockToken });
+      return { token: mockToken };
     } catch (error: unknown) {
       console.error('Error verifying signature:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to verify signature';

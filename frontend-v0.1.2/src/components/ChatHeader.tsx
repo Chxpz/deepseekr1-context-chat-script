@@ -1,4 +1,3 @@
-
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 import { LogOut, Settings, User } from "lucide-react";
 import {
@@ -13,7 +12,7 @@ import { ShareButton } from "./ShareButton";
 import { SocialLinks } from "./SocialLinks";
 
 export const ChatHeader = () => {
-  const { user, logout } = useWalletAuth();
+  const { walletAddress, logout } = useWalletAuth();
 
   const formatWalletAddress = (address: string) => {
     if (!address) return "";
@@ -70,7 +69,7 @@ export const ChatHeader = () => {
           <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/20">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-cyan-300 font-mono text-xs tracking-wider">
-              {formatWalletAddress(user?.wallet || "")}
+              {formatWalletAddress(walletAddress || "")}
             </span>
           </div>
 
@@ -93,7 +92,7 @@ export const ChatHeader = () => {
             >
               <div className="px-3 py-2 border-b border-cyan-500/20">
                 <p className="text-sm font-medium text-cyan-300">Profile Settings</p>
-                <p className="text-xs text-gray-400 font-mono">{formatWalletAddress(user?.wallet || "")}</p>
+                <p className="text-xs text-gray-400 font-mono">{formatWalletAddress(walletAddress || "")}</p>
               </div>
               
               <DropdownMenuItem 

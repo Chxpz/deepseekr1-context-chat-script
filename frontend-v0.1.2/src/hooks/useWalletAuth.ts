@@ -1,21 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { authService } from '@/services/auth';
-import { userService } from '@/services/user';
-
-export interface UserProfile {
-  wallet: string;
-  twitter?: string;
-  telegram?: string;
-  email?: string;
-  discord?: string;
-}
 
 export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   token: string | null;
-  user: UserProfile | null;
+  walletAddress: string | null;
   error: string | null;
 }
 
@@ -24,73 +14,72 @@ export const useWalletAuth = () => {
     isAuthenticated: false,
     isLoading: true,
     token: null,
-    user: null,
+    walletAddress: null,
     error: null,
   });
 
   useEffect(() => {
-    console.log('useWalletAuth: Checking for saved authentication...');
-    
-    const savedToken = localStorage.getItem('autonoma_auth_token');
-    const savedUser = localStorage.getItem('autonoma_user_profile');
-    
-    console.log('useWalletAuth: Saved token exists:', !!savedToken);
-    console.log('useWalletAuth: Saved user exists:', !!savedUser);
-    
-    if (savedToken && savedUser) {
-      console.log('useWalletAuth: Restoring authentication state');
+    const checkWalletConnection = async () => {
+      const savedToken = localStorage.getItem('autonoma_auth_token');
+      const savedWallet = localStorage.getItem('autonoma_wallet_address');
+
+      if (savedToken && savedWallet && window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts && accounts.length > 0 && accounts[0].toLowerCase() === savedWallet.toLowerCase()) {
+            setAuthState(prev => ({
+              ...prev,
+              isAuthenticated: true,
+              isLoading: false,
+              token: savedToken,
+              walletAddress: savedWallet,
+            }));
+            return;
+          } else {
+            // Wallet not connected or different wallet
+            localStorage.removeItem('autonoma_auth_token');
+            localStorage.removeItem('autonoma_wallet_address');
+          }
+        } catch (error) {
+          // On error, clear session
+          localStorage.removeItem('autonoma_auth_token');
+          localStorage.removeItem('autonoma_wallet_address');
+        }
+      }
       setAuthState(prev => ({
         ...prev,
-        isAuthenticated: true,
+        isAuthenticated: false,
         isLoading: false,
-        token: savedToken,
-        user: JSON.parse(savedUser),
+        token: null,
+        walletAddress: null,
       }));
-    } else {
-      console.log('useWalletAuth: No saved authentication found');
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-      }));
-    }
+    };
+    checkWalletConnection();
   }, []);
 
-  const checkUserProfile = async (wallet: string): Promise<UserProfile | null> => {
-    return userService.getProfile(wallet);
-  };
-
-  const createUserProfile = async (profileData: UserProfile): Promise<UserProfile> => {
-    return userService.createProfile(profileData);
-  };
-
   const authenticate = async (walletAddress: string) => {
-    console.log('useWalletAuth: Starting authentication for wallet:', walletAddress);
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-    
     try {
+      if (!window.ethereum) {
+        throw new Error('MetaMask is not installed');
+      }
       const nonce = await authService.fetchNonce(walletAddress);
-      const message = `Sign this nonce: ${nonce}`;
+      // Professional web3-style message
+      const message = `Welcome to Autonoma!\n\nTo verify ownership of this wallet and sign in, please sign this one-time code:\n\nNonce: ${nonce}\n\nThis request will not trigger any blockchain transaction or cost any gas.`;
       const signature = await authService.signMessage(message);
-      const { token, user } = await authService.verifySignature(walletAddress, signature);
-      
-      console.log('useWalletAuth: Authentication successful, storing data');
-      
+      const { token } = await authService.verifySignature(walletAddress, signature);
       localStorage.setItem('autonoma_auth_token', token);
-      localStorage.setItem('autonoma_user_profile', JSON.stringify(user));
-      
+      localStorage.setItem('autonoma_wallet_address', walletAddress);
       setAuthState({
         isAuthenticated: true,
         isLoading: false,
         token,
-        user,
+        walletAddress,
         error: null,
       });
-      
-      console.log('useWalletAuth: Authentication state updated');
-      return { token, user };
+      return { token, walletAddress };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-      console.error('useWalletAuth: Authentication failed:', errorMessage);
       setAuthState(prev => ({
         ...prev,
         isLoading: false,
@@ -101,14 +90,13 @@ export const useWalletAuth = () => {
   };
 
   const logout = () => {
-    console.log('useWalletAuth: Logging out');
     localStorage.removeItem('autonoma_auth_token');
-    localStorage.removeItem('autonoma_user_profile');
+    localStorage.removeItem('autonoma_wallet_address');
     setAuthState({
       isAuthenticated: false,
       isLoading: false,
       token: null,
-      user: null,
+      walletAddress: null,
       error: null,
     });
   };
@@ -117,14 +105,12 @@ export const useWalletAuth = () => {
     isAuthenticated: authState.isAuthenticated,
     isLoading: authState.isLoading,
     hasToken: !!authState.token,
-    hasUser: !!authState.user
+    hasWallet: !!authState.walletAddress
   });
 
   return {
     ...authState,
     authenticate,
     logout,
-    checkUserProfile,
-    createUserProfile,
   };
 };
